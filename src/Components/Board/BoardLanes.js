@@ -3,6 +3,7 @@ import { BoardContext } from "./Board";
 import Lane from "./Lane";
 function BoardLanes(props) {
   const {
+    taskState,
     onDragOverHandler,
     onDropHandler,
     onTaskContainerDragStartHandler,
@@ -41,7 +42,7 @@ function BoardLanes(props) {
                   onDrop={(event) => onDropHandler(event, stage.id)}
                   onDragOver={(event) => onDragOverHandler(event)}
                 >
-                  <Lane stage={stage} key={stage.id} />
+                  <Lane stage={stage} tasks={taskState} />
                 </div>
               </div>
             </div>

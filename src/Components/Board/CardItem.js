@@ -15,14 +15,13 @@ function CardItem(props) {
   const [show, setShow] = useState(false);
   const [editedValues, setFormValues] = useState(initialEditedValues);
   const handleClose = () => setShow(false);
-  const { taskState, onDeletingTask, onUpdatingTask } = useContext(
+  const { taskState,dispatch, onUpdatingTask } = useContext(
     BoardContext
   );
 
   const handleShow = () => {
     setShow(true);
   };
-
   const clickHandler = (type) => {
     if (type === "edit") {
      var formValues=  taskState.find((task) => {
@@ -30,10 +29,10 @@ function CardItem(props) {
       });
       setFormValues(formValues);
       handleShow();
-    } else if (type === "delete") {
-      onDeletingTask(props.task.id);
     }
   };
+
+  
 
   const handleUpdate = async (values, submitProps) => {
     try {
@@ -47,6 +46,16 @@ function CardItem(props) {
       submitProps.resetForm();
     } catch (error) {
       console.error("Error updating task:", error);
+    }
+  };
+  const handleDelete = async () => {
+    try {
+      await axios.delete(
+        `http://localhost:5000/api/task/deletetasks/${props.task._id}`
+      );
+      dispatch({ type: "ON_DELETE", payload: props.task._id });
+    } catch (error) {
+      console.error("Error deleting task:", error);
     }
   };
   
@@ -70,7 +79,7 @@ function CardItem(props) {
                 <i className="fas fa-edit"></i>
               </a>
               &nbsp;
-              <a onClick={() => clickHandler("delete")}>
+              <a onClick={handleDelete}>
                 <i className="fas fa-trash"></i>
               </a>
             </div>

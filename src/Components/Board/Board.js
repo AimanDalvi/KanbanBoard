@@ -7,23 +7,21 @@ import axios from "axios";
 
 const stagesData = [
   { name: "Backlog", id: 1 },
-  { name: "Doing", id: 2 },
-  { name: "Review", id: 3 },
-  { name: "done", id: 4 },
-  
+  { name: "To Do", id: 2 },
+  { name: "In progress", id: 3 },
+  { name: "Done", id: 4 },
+ 
 ];
 
-
-
  
-export const BoardContext = createContext({});
+export const BoardContext = createContext({ dispatch: () => {} });
 
 function reducer(state, action) {
   switch (action.type) {
     case "ON_DROP":
       const droppedTask = action.payload;
       const updatedTasks = state.map((task) => {
-        if (task.id === droppedTask.id) {
+        if (task._id === droppedTask._id) {
           return droppedTask;
         }
         return task;
@@ -33,29 +31,32 @@ function reducer(state, action) {
       return action.payload;
     case "ADD_NEW":
       return [...state, action.payload];
-      case "ON_DELETE":
-        return state.filter((task) => task.id !== action.payload);
+    case "ON_DELETE":
+      return state.filter((task) => task._id !== action.payload);
     default:
       return state;
   }
 }
 function Board() {
-  const [taskState, dispatch] = useReducer(reducer,[]);
+  const [taskState, dispatch] = useReducer(reducer, []);
+  // eslint-disable-next-line
   const [stages, setStage] = useState(stagesData);
 
-  useEffect(() => {
-   
-    async function fetchTasks() {
-      try {
-        const response = await axios.get("http://localhost:5000/api/task/fetchalltasks");
-        dispatch({ type: "LOAD_DATA", payload: response.data });
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
-      }
-    }
+  
 
+  useEffect(() => {
     fetchTasks();
   }, []);
+ 
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/task/fetchalltasks/");
+      dispatch({ type: "LOAD_DATA", payload: response.data });
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
 
   const onDragStartHandler = (
     event,
@@ -81,23 +82,22 @@ function Board() {
     }
   };
 
+  const onTaskContainerDropHandler = (event, droppedLaneId) => {
+  /*  let fromLane:any = JSON.parse(event.dataTransfer.getData("laneId"));
+   swapStages(fromLane.laneId,droppedLaneId) */
+  };
+  
  
-
   const onDragOverHandler = (event) => {
     if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
       event.preventDefault();
     }
   };
 
-  const onTaskContainerDropHandler = (event, droppedLaneId) => {
-    /*  let fromLane:any = JSON.parse(event.dataTransfer.getData("laneId"));
-     swapStages(fromLane.laneId,droppedLaneId) */
-    };
-
   const onDropHandler = (event, droppedStageId) => {
     let droppedData = event.dataTransfer.getData("text/plain");
     droppedData = JSON.parse(droppedData);
-    const filterTask = taskState.filter((x) => x.id === droppedData.taskId);
+    const filterTask = taskState.filter((x) => x._id === droppedData.taskId);
     filterTask[0].stage = droppedStageId;
     dispatch({ type: "ON_DROP", payload: filterTask[0] });
   };
@@ -107,30 +107,21 @@ function Board() {
     dataFromChild.id = taskState.length + 1;
     dispatch({ type: "ADD_NEW", payload: dataFromChild });
   };
-  
-  
-  
 
   const onUpdatingTask = (dataFromChild) => {
     console.log(dataFromChild)
     dispatch({ type: "ON_DROP", payload: dataFromChild });
   };
-  
-  
-  
 
-  const onDeletingTask = (taskId) => {
-    dispatch({ type: "ON_DELETE", payload: taskId });
-  };
   
-
+  
   const ContextData = {
     taskState,
+    dispatch,
     onDragStartHandler,
     onDragOverHandler,
     onDropHandler,
     onUpdatingTask,
-    onDeletingTask,
     onTaskContainerDragStartHandler,
     onTaskContainerDropHandler,
     onTaskContainerDragOverHandler
